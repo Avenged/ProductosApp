@@ -1,0 +1,96 @@
+﻿@page "/TablaProductos"
+@using Application;
+@using Application.DTOs;
+@using ProductosApp.Data;
+
+@inject NavigationManager NM
+@inject NotificationService NS
+@inject DialogService DialogService
+@inject IProductService ProductService
+
+<PageTitle>Productos</PageTitle>
+
+<h1>Productos</h1>
+
+<RadzenDataGrid AllowFiltering="true" 
+    AllowColumnResize="true" 
+    AllowAlternatingRows="false" 
+    FilterMode="FilterMode.Simple" 
+    AllowSorting="true" 
+    PageSize="5" 
+    AllowPaging="true" 
+    PagerHorizontalAlign="HorizontalAlign.Left" 
+    ShowPagingSummary="true"
+    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+    Data="@productos"
+    TItem="ProductoDTO"
+    ColumnWidth="300px" 
+    LogicalFilterOperator="LogicalFilterOperator.Or">
+    <Columns>
+        <RadzenDataGridColumn TItem="ProductoDTO" Property="@nameof(ProductoDTO.Id)" Filterable="true" Title="Id" Width="80px" TextAlign="TextAlign.Center" Visible="false" />
+        <RadzenDataGridColumn TItem="ProductoDTO" Property="@nameof(ProductoDTO.Name)" Filterable="true" Title="Nombre" Width="80px" TextAlign="TextAlign.Center" />
+        <RadzenDataGridColumn TItem="ProductoDTO" Property="@nameof(ProductoDTO.Precio)" Filterable="true" Title="Precio" Width="80px" TextAlign="TextAlign.Center" />
+        <RadzenDataGridColumn TItem="ProductoDTO" Property="@nameof(ProductoDTO.Unidades)" Filterable="true" Title="Unidades" Width="80px" TextAlign="TextAlign.Center" />
+        <RadzenDataGridColumn TItem="ProductoDTO" Title="Acciones" Width="50px" TextAlign="TextAlign.Center">
+            <Template Context="data">
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Info" />
+                <RadzenButton Click="@(_ => EliminarProducto(data))" Icon="delete" ButtonStyle="ButtonStyle.Danger" />
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    private IEnumerable<ProductoDTO> productos;
+
+    private async Task EliminarProducto(ProductoDTO producto)
+    {
+        var result = await DialogService.Confirm("Are you sure?", "MyTitle", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+
+        if (result == false || result is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await ProductService.Eliminar(producto.Id);
+
+            NS.Notify(new NotificationMessage
+            {
+                Summary = "Operación exitosa",
+                Detail = "Producto eliminado satisfactoriamente",
+                Severity = NotificationSeverity.Success,
+                Duration = 10000,
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            NS.Notify(new NotificationMessage
+            {
+                Summary = "Error de validación",
+                Detail = $"{ex.Message}",
+                Severity = NotificationSeverity.Warning,
+                Duration = 10000,
+            });
+        }
+        catch (Exception ex)
+        {
+            NS.Notify(new NotificationMessage
+            {
+                Summary = "Ocurrió un error",
+                Detail = $"No se pudo eliminar el producto. Contáctese con su administrador.",
+                Severity = NotificationSeverity.Error,
+                Duration = 10000,
+            });
+        }
+
+        productos = await ProductService.Obtener();
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        //await ProductService.CrearProductosFicticios();
+        productos = await ProductService.Obtener();
+    }
+}
