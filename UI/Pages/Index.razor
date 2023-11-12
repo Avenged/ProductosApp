@@ -1,4 +1,4 @@
-﻿@page "/TablaProductos"
+﻿@page "/"
 @using Application;
 @using Application.DTOs;
 @using ProductosApp.Data;
@@ -11,6 +11,8 @@
 <PageTitle>Productos</PageTitle>
 
 <h1>Productos</h1>
+
+<RadzenButton Style="margin-bottom: 10px;" Click="IrAPagina">Agregar Producto</RadzenButton>
 
 <RadzenDataGrid AllowFiltering="true" 
     AllowColumnResize="true" 
@@ -41,11 +43,13 @@
 </RadzenDataGrid>
 
 @code {
+
+
     private IEnumerable<ProductoDTO> productos;
 
     private async Task EliminarProducto(ProductoDTO producto)
     {
-        var result = await DialogService.Confirm("Are you sure?", "MyTitle", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+        var result = await DialogService.Confirm("Estas seguro mi loco?", "Eliminar Producto", new ConfirmOptions() { OkButtonText = "Si", CancelButtonText = "No" });
 
         if (result == false || result is null)
         {
@@ -93,4 +97,6 @@
         //await ProductService.CrearProductosFicticios();
         productos = await ProductService.Obtener();
     }
+
+    void IrAPagina() => NM.NavigateTo("/AgregarProducto");
 }

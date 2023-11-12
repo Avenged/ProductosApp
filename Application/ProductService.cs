@@ -1,6 +1,7 @@
 ﻿using Application.DTOs;
 using Microsoft.EntityFrameworkCore;
 using ProductosApp.Data;
+using System;
 
 namespace Application;
 
@@ -13,9 +14,16 @@ public class ProductService : IProductService
         this.context = context;
     }
 
-    public async Task Crear()
+    public async Task AgregarProducto(string nombre, decimal precio, int unidades)
     {
+        context.Productos.Add(new Producto
+        {
+            Name = nombre,
+            Precio = precio,
+            Unidades = unidades,
+        });
 
+        await context.SaveChangesAsync();
     }
 
     public async Task CrearProductosFicticios()
