@@ -65,22 +65,51 @@ public class ProductService : IProductService
         return productosDTO;
     }
 
-    public async Task Actualizar()
-    {
-
-    }
-
     public async Task Eliminar(int id)
     {
-        //throw new InvalidOperationException("El producto está siendo usado, no puede ser eliminado.");
-        throw new Exception("Ocurrió un error al comunicarse con la base de datos.");
+        var producto = await context.Productos
+            .FirstOrDefaultAsync(x => x.Id == id);
 
-        Producto productoAEliminar = new()
-        {
-            Id = id,
-        };
-
-        context.Productos.Remove(productoAEliminar);
+        context.Productos.Remove(producto);
         await context.SaveChangesAsync();
+    }
+
+    public async Task ActualizarProducto(int productoId, string nombre, decimal precio, int unidades)
+    {
+        // Trae el producto de la base, y trackea sus cambios
+        var producto = await context.Productos
+            .FirstOrDefaultAsync(x => x.Id == productoId);
+
+        producto.Name = nombre;
+        producto.Precio = precio;
+        producto.Unidades = unidades;
+
+        await context.SaveChangesAsync();
+    }
+
+    public async Task<ProductoDTO> Obtener(int id)
+    {
+        var entidadesTrackeadas = context.ChangeTracker.Entries().ToList();
+
+        // Si no encuentra el producto, entonces lanza una excepción
+        //var producto = await context.Productos.FirstAsync(x => x.Id == id);
+
+        // Si no encuentra el producto, entonces la variable "producto" quedará como nula
+        // El producto acá se empieza a trackear.
+        var producto = await context.Productos.FirstOrDefaultAsync(x => x.Id == id);
+   
+        if (producto is null)
+        {
+            return null;
+        }
+
+        return new ProductoDTO
+        {
+            Id = producto.Id,
+            Marca = producto.Marca?.Nombre,
+            Name = producto.Name,
+            Precio = producto.Precio,
+            Unidades = producto.Unidades,
+        };
     }
 }

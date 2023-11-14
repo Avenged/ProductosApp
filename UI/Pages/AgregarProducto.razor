@@ -1,4 +1,7 @@
 ﻿@page "/AgregarProducto"
+@page "/ActualizarProducto/{Id:int}"
+@page "/VerProducto/{Id:int}"
+
 @using Application;
 @using Application.DTOs;
 @using ProductosApp.Data;
@@ -8,10 +11,32 @@
 @inject DialogService DialogService
 @inject IProductService ProductService
 
-<PageTitle>Agregar Productos</PageTitle>
+@if (accion == AccionABM.Ver)
+{
+    <PageTitle>Ver Productos</PageTitle>
+}
+else if (accion == AccionABM.Actualizar)
+{
+    <PageTitle>Actualizar Productos</PageTitle>
+}
+else
+{
+    <PageTitle>Agregar Productos</PageTitle>
+}
 
-<h3>Agregar Producto</h3>
 
+@if (accion == AccionABM.Ver)
+{
+    <h3>Ver Producto</h3>
+}
+else if (accion == AccionABM.Actualizar)
+{
+    <h3>Actualizar Producto</h3>
+}
+else
+{
+    <h3>Agregar Producto</h3>
+}
 
 <RadzenTemplateForm Data="@productos">
     <RadzenRow Gap="2rem" Class="rz-p-0 rz-p-lg-4">
@@ -24,7 +49,7 @@
                                 <RadzenLabel Text="Nombre" />
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
-                                <RadzenTextBox Style="width: 100%;" Name="Name" @bind-Value="@name"/>
+                                <RadzenTextBox Style="width: 100%;" Name="Name" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@name" />
                             </RadzenColumn>
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center">
@@ -32,7 +57,7 @@
                                 <RadzenLabel Text="Precio" />
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
-                                <RadzenNumeric  Style="width: 100%;" Name="Precio" @bind-Value="@precio"/>
+                                <RadzenNumeric Style="width: 100%;" Name="Precio" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@precio" />
                             </RadzenColumn>
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center">
@@ -40,7 +65,7 @@
                                 <RadzenLabel Text="Unidades" />
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
-                                <RadzenNumeric Style="width: 100%;" Name="Unidades" @bind-Value="@unidades" />
+                                <RadzenNumeric Style="width: 100%;" Name="Unidades" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@unidades" />
                             </RadzenColumn>
                         </RadzenRow>
                     </RadzenStack>
@@ -49,7 +74,10 @@
         </RadzenColumn>
     </RadzenRow>
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-mt-8 rz-mb-4">
-        <RadzenButton ButtonType="ButtonType.Submit" Size="ButtonSize.Large" Icon="save" Text="Save" Click="@Submit"/>
+        @if (accion != AccionABM.Ver)
+        {
+            <RadzenButton ButtonType="ButtonType.Submit" Size="ButtonSize.Large" Icon="save" Text="Save" Click="@Submit" />
+        }
         <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Large" Icon="cancel" Text="Cancel" Click="@Cancel" />
     </RadzenStack>
 </RadzenTemplateForm>
@@ -60,31 +88,103 @@
     public string name;
     public decimal precio;
     public int unidades;
+    private AccionABM accion;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (NM.Uri.Contains("ActualizarProducto"))
+        {
+            accion = AccionABM.Actualizar;
+            var producto = await ProductService.Obtener(Id);
+            name = producto.Name;
+            precio = producto.Precio;
+            unidades = producto.Unidades;
+        }
+        else if (NM.Uri.Contains("VerProducto"))
+        {
+            accion = AccionABM.Ver;
+            var producto = await ProductService.Obtener(Id);
+            name = producto.Name;
+            precio = producto.Precio;
+            unidades = producto.Unidades;
+        }
+        else
+        {
+            accion = AccionABM.Crear;
+        }
+    }
 
     private async Task Submit()
     {
-        var result = await DialogService.Confirm("Desea agregar el producto?", "Validacion", new ConfirmOptions() { OkButtonText = "Si", CancelButtonText = "No" });
-
-        if (result == false || result is null)
+        if (accion == AccionABM.Crear)
         {
-            return;
+            var result = await DialogService.Confirm("Desea agregar el producto?", "Validacion", new ConfirmOptions() { OkButtonText = "Si", CancelButtonText = "No" });
+
+            if (result == false || result is null)
+            {
+                return;
+            }
+
+            try
+            {
+                await ProductService.AgregarProducto(name, precio, unidades);
+
+                NS.Notify(new NotificationMessage
+                    {
+                        Summary = "Operación exitosa",
+                        Detail = "Producto agregado satisfactoriamente",
+                        Severity = NotificationSeverity.Success,
+                        Duration = 10000,
+                    });
+            }
+            catch (InvalidOperationException ex)
+            {
+                NS.Notify(new NotificationMessage
+                    {
+                        Summary = "Error de validación",
+                        Detail = $"{ex.Message}",
+                        Severity = NotificationSeverity.Warning,
+                        Duration = 10000,
+                    });
+            }
+            catch (Exception ex)
+            {
+                NS.Notify(new NotificationMessage
+                    {
+                        Summary = "Ocurrió un error",
+                        Detail = $"No se pudo agregar el producto. Contáctese con su administrador.",
+                        Severity = NotificationSeverity.Error,
+                        Duration = 10000,
+                    });
+            }
         }
-
-        try
+        else
         {
-            await ProductService.AgregarProducto(name,precio,unidades);
+            var result = await DialogService.Confirm("Desea actualizar el producto?", "Validacion", new ConfirmOptions() { OkButtonText = "Si", CancelButtonText = "No" });
 
-            NS.Notify(new NotificationMessage
+            if (result == false || result is null)
+            {
+                return;
+            }
+
+            try
+            {
+                await ProductService.ActualizarProducto(Id, name, precio, unidades);
+
+                NS.Notify(new NotificationMessage
                 {
                     Summary = "Operación exitosa",
-                    Detail = "Producto agregado satisfactoriamente",
+                    Detail = "Producto actualizado satisfactoriamente",
                     Severity = NotificationSeverity.Success,
                     Duration = 10000,
                 });
-        }
-        catch (InvalidOperationException ex)
-        {
-            NS.Notify(new NotificationMessage
+            }
+            catch (InvalidOperationException ex)
+            {
+                NS.Notify(new NotificationMessage
                 {
                     Summary = "Error de validación",
                     Detail = $"{ex.Message}",
@@ -92,15 +192,16 @@
                     Duration = 10000,
                 });
         }
-        catch (Exception ex)
-        {
-            NS.Notify(new NotificationMessage
+            catch (Exception ex)
+            {
+                NS.Notify(new NotificationMessage
                 {
                     Summary = "Ocurrió un error",
-                    Detail = $"No se pudo agregar el producto. Contáctese con su administrador.",
+                    Detail = $"No se pudo actualizar el producto. Contáctese con su administrador.",
                     Severity = NotificationSeverity.Error,
                     Duration = 10000,
                 });
+            }
         }
 
         NM.NavigateTo("/");

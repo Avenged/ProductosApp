@@ -35,7 +35,8 @@
         <RadzenDataGridColumn TItem="ProductoDTO" Property="@nameof(ProductoDTO.Unidades)" Filterable="true" Title="Unidades" Width="80px" TextAlign="TextAlign.Center" />
         <RadzenDataGridColumn TItem="ProductoDTO" Title="Acciones" Width="50px" TextAlign="TextAlign.Center">
             <Template Context="data">
-                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Info" />
+                <RadzenButton Icon="visibility" ButtonStyle="ButtonStyle.Info" Click="@(x => NM.NavigateTo($"/VerProducto/{data.Id}"))" />
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Info" Click="@(x => NM.NavigateTo($"/ActualizarProducto/{data.Id}"))" />
                 <RadzenButton Click="@(_ => EliminarProducto(data))" Icon="delete" ButtonStyle="ButtonStyle.Danger" />
             </Template>
         </RadzenDataGridColumn>
