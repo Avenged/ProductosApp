@@ -14,5 +14,6 @@ namespace Application.DTOs
         public int Unidades { get; set; }
         public decimal Precio { get; set; }
         public string Marca { get; set; }
+        public int? MarcaId { get; set; }
     }
 }

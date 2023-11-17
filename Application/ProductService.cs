@@ -14,13 +14,14 @@ public class ProductService : IProductService
         this.context = context;
     }
 
-    public async Task AgregarProducto(string nombre, decimal precio, int unidades)
+    public async Task Agregar(string nombre, decimal precio, int unidades, int? marcaId)
     {
         context.Productos.Add(new Producto
         {
             Name = nombre,
             Precio = precio,
             Unidades = unidades,
+            MarcaId = marcaId,
         });
 
         await context.SaveChangesAsync();
@@ -50,13 +51,15 @@ public class ProductService : IProductService
     public async Task<IEnumerable<ProductoDTO>> Obtener()
     {
         var productos = await context.Productos
-            .AsNoTracking()
+            .Include(p => p.Marca)
+            .OrderBy(p => p.Name)
             .ToArrayAsync();
 
         var productosDTO = productos.Select(p => new ProductoDTO
         {
             Id = p.Id,
             Marca = p.Marca?.Nombre,
+            MarcaId = p.MarcaId,
             Name = p.Name,
             Precio = p.Precio,
             Unidades = p.Unidades,
@@ -74,7 +77,7 @@ public class ProductService : IProductService
         await context.SaveChangesAsync();
     }
 
-    public async Task ActualizarProducto(int productoId, string nombre, decimal precio, int unidades)
+    public async Task Actualizar(int productoId, string nombre, decimal precio, int unidades, int? marcaId)
     {
         // Trae el producto de la base, y trackea sus cambios
         var producto = await context.Productos
@@ -83,6 +86,7 @@ public class ProductService : IProductService
         producto.Name = nombre;
         producto.Precio = precio;
         producto.Unidades = unidades;
+        producto.MarcaId = marcaId;
 
         await context.SaveChangesAsync();
     }
@@ -107,6 +111,7 @@ public class ProductService : IProductService
         {
             Id = producto.Id,
             Marca = producto.Marca?.Nombre,
+            MarcaId = producto.MarcaId,
             Name = producto.Name,
             Precio = producto.Precio,
             Unidades = producto.Unidades,

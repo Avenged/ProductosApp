@@ -10,6 +10,7 @@
 @inject NotificationService NS
 @inject DialogService DialogService
 @inject IProductService ProductService
+@inject IMarcaService MarcaService
 
 @if (accion == AccionABM.Ver)
 {
@@ -44,6 +45,7 @@ else
             <RadzenStack>
                 <RadzenFieldset Text="Producto">
                     <RadzenStack Gap="1rem">
+
                         <RadzenRow AlignItems="AlignItems.Center">
                             <RadzenColumn Size="12" SizeMD="4">
                                 <RadzenLabel Text="Nombre" />
@@ -52,6 +54,7 @@ else
                                 <RadzenTextBox Style="width: 100%;" Name="Name" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@name" />
                             </RadzenColumn>
                         </RadzenRow>
+
                         <RadzenRow AlignItems="AlignItems.Center">
                             <RadzenColumn Size="12" SizeMD="4">
                                 <RadzenLabel Text="Precio" />
@@ -60,6 +63,7 @@ else
                                 <RadzenNumeric Style="width: 100%;" Name="Precio" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@precio" />
                             </RadzenColumn>
                         </RadzenRow>
+
                         <RadzenRow AlignItems="AlignItems.Center">
                             <RadzenColumn Size="12" SizeMD="4">
                                 <RadzenLabel Text="Unidades" />
@@ -68,6 +72,16 @@ else
                                 <RadzenNumeric Style="width: 100%;" Name="Unidades" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@unidades" />
                             </RadzenColumn>
                         </RadzenRow>
+
+                        <RadzenRow AlignItems="AlignItems.Center">
+                            <RadzenColumn Size="12" SizeMD="4">
+                                <RadzenLabel Text="Marca" />
+                            </RadzenColumn>
+                            <RadzenColumn Size="12" SizeMD="8">
+                                <RadzenDropDown Style="width: 100%;" ReadOnly="@(accion == AccionABM.Ver)" TValue="int?" Data="marcas" TextProperty="@nameof(MarcaDTO.Nombre)" ValueProperty="@nameof(MarcaDTO.Id)" @bind-Value="marcaId" />
+                            </RadzenColumn>
+                        </RadzenRow>
+
                     </RadzenStack>
                 </RadzenFieldset>
             </RadzenStack>
@@ -84,10 +98,12 @@ else
 
 @code {
     private IEnumerable<ProductoDTO> productos;
+    private IEnumerable<MarcaDTO> marcas;
 
     public string name;
     public decimal precio;
     public int unidades;
+    public int? marcaId;
     private AccionABM accion;
 
     [Parameter]
@@ -95,6 +111,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        marcas = await MarcaService.Obtener();
+
         if (NM.Uri.Contains("ActualizarProducto"))
         {
             accion = AccionABM.Actualizar;
@@ -102,6 +120,7 @@ else
             name = producto.Name;
             precio = producto.Precio;
             unidades = producto.Unidades;
+            marcaId = producto.MarcaId;
         }
         else if (NM.Uri.Contains("VerProducto"))
         {
@@ -110,6 +129,7 @@ else
             name = producto.Name;
             precio = producto.Precio;
             unidades = producto.Unidades;
+            marcaId = producto.MarcaId;
         }
         else
         {
@@ -130,7 +150,7 @@ else
 
             try
             {
-                await ProductService.AgregarProducto(name, precio, unidades);
+                await ProductService.Agregar(name, precio, unidades, marcaId);
 
                 NS.Notify(new NotificationMessage
                     {
@@ -172,7 +192,7 @@ else
 
             try
             {
-                await ProductService.ActualizarProducto(Id, name, precio, unidades);
+                await ProductService.Actualizar(Id, name, precio, unidades, marcaId);
 
                 NS.Notify(new NotificationMessage
                 {

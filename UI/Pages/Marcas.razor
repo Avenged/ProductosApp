@@ -1,0 +1,101 @@
+﻿@page "/Marcas"
+@using Application;
+@using Application.DTOs;
+@using ProductosApp.Data;
+
+@inject NavigationManager NM
+@inject NotificationService NS
+@inject DialogService DialogService
+@inject IMarcaService MarcaService
+
+<PageTitle>Marcas</PageTitle>
+
+<h1>Marcas</h1>
+
+<RadzenButton Style="margin-bottom: 10px;" Click="IrAPagina">Agregar Marca</RadzenButton>
+
+<RadzenDataGrid AllowFiltering="true" 
+    AllowColumnResize="true" 
+    AllowAlternatingRows="false" 
+    FilterMode="FilterMode.Simple" 
+    AllowSorting="true" 
+    PageSize="5" 
+    AllowPaging="true" 
+    PagerHorizontalAlign="HorizontalAlign.Left" 
+    ShowPagingSummary="true"
+    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+    Data="@marcas"
+    TItem="MarcaDTO"
+    ColumnWidth="300px" 
+    LogicalFilterOperator="LogicalFilterOperator.Or">
+    <Columns>
+        <RadzenDataGridColumn TItem="MarcaDTO" Property="@nameof(MarcaDTO.Id)" Filterable="true" Title="Id" Width="80px" TextAlign="TextAlign.Center" Visible="false" />
+        <RadzenDataGridColumn TItem="MarcaDTO" Property="@nameof(MarcaDTO.Nombre)" Filterable="true" Title="Nombre" Width="80px" TextAlign="TextAlign.Center" />
+        <RadzenDataGridColumn TItem="MarcaDTO" Title="Acciones" Width="50px" TextAlign="TextAlign.Center">
+            <Template Context="data">
+                <RadzenButton Icon="visibility" ButtonStyle="ButtonStyle.Info" Click="@(x => NM.NavigateTo($"/VerMarca/{data.Id}"))" />
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Info" Click="@(x => NM.NavigateTo($"/ActualizarMarca/{data.Id}"))" />
+                <RadzenButton Click="@(_ => Eliminar(data))" Icon="delete" ButtonStyle="ButtonStyle.Danger" />
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+
+
+    private IEnumerable<MarcaDTO> marcas;
+
+    private async Task Eliminar(MarcaDTO item)
+    {
+        var result = await DialogService.Confirm("Estas seguro mi loco?", "Eliminar Producto", new ConfirmOptions() { OkButtonText = "Si", CancelButtonText = "No" });
+
+        if (result == false || result is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await MarcaService.Eliminar(item.Id);
+
+            NS.Notify(new NotificationMessage
+            {
+                Summary = "Operación exitosa",
+                Detail = "Marca eliminada satisfactoriamente",
+                Severity = NotificationSeverity.Success,
+                Duration = 10000,
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            NS.Notify(new NotificationMessage
+            {
+                Summary = "Error de validación",
+                Detail = $"{ex.Message}",
+                Severity = NotificationSeverity.Warning,
+                Duration = 10000,
+            });
+        }
+        catch (Exception ex)
+        {
+            NS.Notify(new NotificationMessage
+            {
+                Summary = "Ocurrió un error",
+                Detail = $"No se pudo eliminar la marca. Contáctese con su administrador.",
+                Severity = NotificationSeverity.Error,
+                Duration = 10000,
+            });
+        }
+
+        marcas = await MarcaService.Obtener();
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        //await ProductService.CrearProductosFicticios();
+        marcas = await MarcaService.Obtener();
+    }
+
+    void IrAPagina() => NM.NavigateTo("/AgregarMarca");
+}

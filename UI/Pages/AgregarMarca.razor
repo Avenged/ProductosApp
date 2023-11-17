@@ -1,0 +1,200 @@
+﻿@page "/AgregarMarca"
+@page "/ActualizarMarca/{Id:int}"
+@page "/VerMarca/{Id:int}"
+
+@using Application;
+@using Application.DTOs;
+@using ProductosApp.Data;
+
+@inject NavigationManager NM
+@inject NotificationService NS
+@inject DialogService DialogService
+@inject IMarcaService MarcaService
+
+@if (accion == AccionABM.Ver)
+{
+    <PageTitle>Ver Marca</PageTitle>
+}
+else if (accion == AccionABM.Actualizar)
+{
+    <PageTitle>Actualizar Marca</PageTitle>
+}
+else
+{
+    <PageTitle>Agregar Marca</PageTitle>
+}
+
+
+@if (accion == AccionABM.Ver)
+{
+    <h3>Ver Marca</h3>
+}
+else if (accion == AccionABM.Actualizar)
+{
+    <h3>Actualizar Marca</h3>
+}
+else
+{
+    <h3>Agregar Marca</h3>
+}
+
+<RadzenTemplateForm Data="@marcas">
+    <RadzenRow Gap="2rem" Class="rz-p-0 rz-p-lg-4">
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenStack>
+                <RadzenFieldset Text="Marca">
+                    <RadzenStack Gap="1rem">
+                        <RadzenRow AlignItems="AlignItems.Center">
+                            <RadzenColumn Size="12" SizeMD="4">
+                                <RadzenLabel Text="Nombre" />
+                            </RadzenColumn>
+                            <RadzenColumn Size="12" SizeMD="8">
+                                <RadzenTextBox Style="width: 100%;" Name="Name" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@name" />
+                            </RadzenColumn>
+                        </RadzenRow>
+                    </RadzenStack>
+                </RadzenFieldset>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-mt-8 rz-mb-4">
+        @if (accion != AccionABM.Ver)
+        {
+            <RadzenButton ButtonType="ButtonType.Submit" Size="ButtonSize.Large" Icon="save" Text="Save" Click="@Submit" />
+        }
+        <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Large" Icon="cancel" Text="Cancel" Click="@Cancel" />
+    </RadzenStack>
+</RadzenTemplateForm>
+
+@code {
+    private IEnumerable<MarcaDTO> marcas;
+
+    public string name;
+    private AccionABM accion;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (NM.Uri.Contains("ActualizarMarca"))
+        {
+            accion = AccionABM.Actualizar;
+            var marca = await MarcaService.Obtener(Id);
+            name = marca.Nombre;
+        }
+        else if (NM.Uri.Contains("VerMarca"))
+        {
+            accion = AccionABM.Ver;
+            var marca = await MarcaService.Obtener(Id);
+            name = marca.Nombre;
+        }
+        else
+        {
+            accion = AccionABM.Crear;
+        }
+    }
+
+    private async Task Submit()
+    {
+        if (accion == AccionABM.Crear)
+        {
+            var result = await DialogService.Confirm("Desea agregar la marca?", "Validacion", new ConfirmOptions() { OkButtonText = "Si", CancelButtonText = "No" });
+
+            if (result == false || result is null)
+            {
+                return;
+            }
+
+            try
+            {
+                await MarcaService.Agregar(name);
+
+                NS.Notify(new NotificationMessage
+                {
+                    Summary = "Operación exitosa",
+                    Detail = "Marca agregada satisfactoriamente",
+                    Severity = NotificationSeverity.Success,
+                    Duration = 10000,
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                NS.Notify(new NotificationMessage
+                {
+                    Summary = "Error de validación",
+                    Detail = $"{ex.Message}",
+                    Severity = NotificationSeverity.Warning,
+                    Duration = 10000,
+                });
+
+                return;
+            }
+            catch (Exception ex)
+            {
+                NS.Notify(new NotificationMessage
+                {
+                    Summary = "Ocurrió un error",
+                    Detail = $"No se pudo agregar la marca. Contáctese con su administrador.",
+                    Severity = NotificationSeverity.Error,
+                    Duration = 10000,
+                });
+
+                return;
+            }
+        }
+        else
+        {
+            var result = await DialogService.Confirm("Desea actualizar la marca?", "Validacion", new ConfirmOptions() { OkButtonText = "Si", CancelButtonText = "No" });
+
+            if (result == false || result is null)
+            {
+                return;
+            }
+
+            try
+            {
+                await MarcaService.Actualizar(Id, name);
+
+                NS.Notify(new NotificationMessage
+                {
+                    Summary = "Operación exitosa",
+                    Detail = "Marca actualizada satisfactoriamente",
+                    Severity = NotificationSeverity.Success,
+                    Duration = 10000,
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                NS.Notify(new NotificationMessage
+                {
+                    Summary = "Error de validación",
+                    Detail = $"{ex.Message}",
+                    Severity = NotificationSeverity.Warning,
+                    Duration = 10000,
+                });
+
+                return;
+            }
+            catch (Exception ex)
+            {
+                NS.Notify(new NotificationMessage
+                {
+                    Summary = "Ocurrió un error",
+                    Detail = $"No se pudo actualizar la marca. Contáctese con su administrador.",
+                    Severity = NotificationSeverity.Error,
+                    Duration = 10000,
+                });
+
+                return;
+            }
+        }
+
+        NM.NavigateTo("/Marcas");
+    }
+
+    void Cancel()
+    {
+        NM.NavigateTo("/Marcas");
+    }
+}
