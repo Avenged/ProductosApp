@@ -15,5 +15,7 @@ namespace Application.DTOs
         public decimal Precio { get; set; }
         public string Marca { get; set; }
         public int? MarcaId { get; set; }
+        public string Categoria { get; set; }
+        public int? CategoriaId { get; set; }
     }
 }

@@ -28,6 +28,7 @@ builder.Services.AddSingleton<WeatherForecastService>();
 
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IMarcaService, MarcaService>();
+builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 
 builder.Services.AddRadzenComponents();
 

@@ -11,6 +11,7 @@
 @inject DialogService DialogService
 @inject IProductService ProductService
 @inject IMarcaService MarcaService
+@inject ICategoriaService CategoriaService
 
 @if (accion == AccionABM.Ver)
 {
@@ -82,6 +83,15 @@ else
                             </RadzenColumn>
                         </RadzenRow>
 
+                        <RadzenRow AlignItems="AlignItems.Center">
+                            <RadzenColumn Size="12" SizeMD="4">
+                                <RadzenLabel Text="Categoria" />
+                            </RadzenColumn>
+                            <RadzenColumn Size="12" SizeMD="8">
+                                <RadzenDropDown Style="width: 100%;" ReadOnly="@(accion == AccionABM.Ver)" TValue="int?" Data="categorias" TextProperty="@nameof(CategoriaDTO.Nombre)" ValueProperty="@nameof(CategoriaDTO.Id)" @bind-Value="categoriaId" />
+                            </RadzenColumn>
+                        </RadzenRow>
+
                     </RadzenStack>
                 </RadzenFieldset>
             </RadzenStack>
@@ -99,11 +109,13 @@ else
 @code {
     private IEnumerable<ProductoDTO> productos;
     private IEnumerable<MarcaDTO> marcas;
+    private IEnumerable<CategoriaDTO> categorias;
 
     public string name;
     public decimal precio;
     public int unidades;
     public int? marcaId;
+    public int? categoriaId;
     private AccionABM accion;
 
     [Parameter]
@@ -112,6 +124,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         marcas = await MarcaService.Obtener();
+        categorias = await CategoriaService.Obtener();
 
         if (NM.Uri.Contains("ActualizarProducto"))
         {
@@ -121,6 +134,7 @@ else
             precio = producto.Precio;
             unidades = producto.Unidades;
             marcaId = producto.MarcaId;
+            categoriaId = producto.CategoriaId;
         }
         else if (NM.Uri.Contains("VerProducto"))
         {
@@ -130,6 +144,7 @@ else
             precio = producto.Precio;
             unidades = producto.Unidades;
             marcaId = producto.MarcaId;
+            categoriaId = producto.CategoriaId;
         }
         else
         {
@@ -150,7 +165,7 @@ else
 
             try
             {
-                await ProductService.Agregar(name, precio, unidades, marcaId);
+                await ProductService.Agregar(name, precio, unidades, marcaId, categoriaId);
 
                 NS.Notify(new NotificationMessage
                     {
@@ -192,7 +207,7 @@ else
 
             try
             {
-                await ProductService.Actualizar(Id, name, precio, unidades, marcaId);
+                await ProductService.Actualizar(Id, name, precio, unidades, marcaId, categoriaId);
 
                 NS.Notify(new NotificationMessage
                 {

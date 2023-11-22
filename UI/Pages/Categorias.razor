@@ -1,0 +1,101 @@
+﻿@page "/Categorias"
+@using Application;
+@using Application.DTOs;
+@using ProductosApp.Data;
+
+@inject NavigationManager NM
+@inject NotificationService NS
+@inject DialogService DialogService
+@inject ICategoriaService CategoriaService
+
+<PageTitle>Categorias</PageTitle>
+
+<h1>Categorias</h1>
+
+<RadzenButton Style="margin-bottom: 10px;" Click="IrAPagina">Agregar Categorias</RadzenButton>
+
+<RadzenDataGrid AllowFiltering="true" 
+    AllowColumnResize="true" 
+    AllowAlternatingRows="false" 
+    FilterMode="FilterMode.Simple" 
+    AllowSorting="true" 
+    PageSize="5" 
+    AllowPaging="true" 
+    PagerHorizontalAlign="HorizontalAlign.Left" 
+    ShowPagingSummary="true"
+    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+    Data="@categorias"
+                TItem="CategoriaDTO"
+    ColumnWidth="300px" 
+    LogicalFilterOperator="LogicalFilterOperator.Or">
+    <Columns>
+        <RadzenDataGridColumn TItem="CategoriaDTO" Property="@nameof(CategoriaDTO.Id)" Filterable="true" Title="Id" Width="80px" TextAlign="TextAlign.Center" Visible="false" />
+        <RadzenDataGridColumn TItem="CategoriaDTO" Property="@nameof(CategoriaDTO.Nombre)" Filterable="true" Title="Nombre" Width="80px" TextAlign="TextAlign.Center" />
+        <RadzenDataGridColumn TItem="CategoriaDTO" Title="Acciones" Width="50px" TextAlign="TextAlign.Center">
+            <Template Context="data">
+                <RadzenButton Icon="visibility" ButtonStyle="ButtonStyle.Info" Click="@(x => NM.NavigateTo($"/VerCategoria/{data.Id}"))" />
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Info" Click="@(x => NM.NavigateTo($"/ActualizarCategoria/{data.Id}"))" />
+                <RadzenButton Click="@(_ => Eliminar(data))" Icon="delete" ButtonStyle="ButtonStyle.Danger" />
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+
+
+    private IEnumerable<CategoriaDTO> categorias;
+
+    private async Task Eliminar(CategoriaDTO item)
+    {
+        var result = await DialogService.Confirm("Estas seguro mi loco?", "Eliminar Producto", new ConfirmOptions() { OkButtonText = "Si", CancelButtonText = "No" });
+
+        if (result == false || result is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await CategoriaService.Eliminar(item.Id);
+
+            NS.Notify(new NotificationMessage
+            {
+                Summary = "Operación exitosa",
+                    Detail = "Categoria eliminada satisfactoriamente",
+                Severity = NotificationSeverity.Success,
+                Duration = 10000,
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            NS.Notify(new NotificationMessage
+            {
+                Summary = "Error de validación",
+                Detail = $"{ex.Message}",
+                Severity = NotificationSeverity.Warning,
+                Duration = 10000,
+            });
+        }
+        catch (Exception ex)
+        {
+            NS.Notify(new NotificationMessage
+            {
+                Summary = "Ocurrió un error",
+                    Detail = $"No se pudo eliminar la categoria. Contáctese con su administrador.",
+                Severity = NotificationSeverity.Error,
+                Duration = 10000,
+            });
+        }
+
+        categorias = await CategoriaService.Obtener();
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        //await ProductService.CrearProductosFicticios();
+        categorias = await CategoriaService.Obtener();
+    }
+
+    void IrAPagina() => NM.NavigateTo("/AgregarCategoria");
+}
