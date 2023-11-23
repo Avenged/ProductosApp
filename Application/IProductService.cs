@@ -10,5 +10,5 @@ public interface IProductService
     Task CrearProductosFicticios();
     Task Eliminar(int id);
     Task Actualizar(int productoId, string nombre, decimal precio, int unidades, int? marcaId, int? categoriaId);
-    Task Agregar(string nombre, decimal precio, int unidades, int? marcaId, int? categoriaId);
+    Task Agregar(string nombre, decimal precio, int unidades, int? marcaId, IEnumerable<int> categoriaIds);
 }

@@ -1,4 +1,5 @@
 ﻿using Application.DTOs;
+using Domain;
 using Microsoft.EntityFrameworkCore;
 using ProductosApp.Data;
 using System;
@@ -14,17 +15,27 @@ public class ProductService : IProductService
         this.context = context;
     }
 
-    public async Task Agregar(string nombre, decimal precio, int unidades, int? marcaId, int? categoriaId)
+    public async Task Agregar(string nombre, decimal precio, int unidades, int? marcaId, IEnumerable<int> categoriaIds)
     {
-        context.Productos.Add(new Producto
+        var producto = new Producto
         {
             Name = nombre,
             Precio = precio,
             Unidades = unidades,
             MarcaId = marcaId,
-            CategoriaId = categoriaId,
-        });
+        };
+        context.Productos.Add(producto);
+        await context.SaveChangesAsync();
 
+        foreach (var categoriaId in categoriaIds)
+        {
+            var productoCategoria = new ProductoCategorias
+            {
+                ProductoId = producto.Id,
+                CategoriaId = categoriaId,
+            };
+            context.ProductoCategorias.Add(productoCategoria);
+        }
         await context.SaveChangesAsync();
     }
 
@@ -61,8 +72,8 @@ public class ProductService : IProductService
             Id = p.Id,
             Marca = p.Marca?.Nombre,
             MarcaId = p.MarcaId,
-            Categoria = p.Categoria?.Nombre,
-            CategoriaId = p.CategoriaId,
+            //Categoria = p.Categorias?.Nombre,
+            //CategoriaId = p.CategoriaIds,
             Name = p.Name,
             Precio = p.Precio,
             Unidades = p.Unidades,
@@ -90,7 +101,7 @@ public class ProductService : IProductService
         producto.Precio = precio;
         producto.Unidades = unidades;
         producto.MarcaId = marcaId;
-        producto.CategoriaId = categoriaId;
+        //producto.CategoriaIds = categoriaId;
 
         await context.SaveChangesAsync();
     }
@@ -116,8 +127,8 @@ public class ProductService : IProductService
             Id = producto.Id,
             Marca = producto.Marca?.Nombre,
             MarcaId = producto.MarcaId,
-            Categoria = producto.Categoria?.Nombre,
-            CategoriaId = producto.CategoriaId,
+            //Categoria = producto.Categorias?.Nombre,
+            //CategoriaId = producto.CategoriaIds,
             Name = producto.Name,
             Precio = producto.Precio,
             Unidades = producto.Unidades,

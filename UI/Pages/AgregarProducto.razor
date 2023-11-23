@@ -79,7 +79,15 @@ else
                                 <RadzenLabel Text="Marca" />
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
-                                <RadzenDropDown Style="width: 100%;" ReadOnly="@(accion == AccionABM.Ver)" TValue="int?" Data="marcas" TextProperty="@nameof(MarcaDTO.Nombre)" ValueProperty="@nameof(MarcaDTO.Id)" @bind-Value="marcaId" />
+                                <RadzenDropDown Style="width: 100%;"
+                                                ReadOnly="@(accion == AccionABM.Ver)"
+                                                TValue="int?"
+                                                Data="marcas"
+                                                AllowClear="true"
+                                                Placeholder="Seleccionar"
+                                                TextProperty="@nameof(MarcaDTO.Nombre)"
+                                                ValueProperty="@nameof(MarcaDTO.Id)" 
+                                                @bind-Value="marcaId" />
                             </RadzenColumn>
                         </RadzenRow>
 
@@ -88,7 +96,15 @@ else
                                 <RadzenLabel Text="Categoria" />
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
-                                <RadzenDropDown Style="width: 100%;" ReadOnly="@(accion == AccionABM.Ver)" TValue="int?" Data="categorias" TextProperty="@nameof(CategoriaDTO.Nombre)" ValueProperty="@nameof(CategoriaDTO.Id)" @bind-Value="categoriaId" />
+                                <RadzenDropDown Style="width: 100%;"
+                                                ReadOnly="@(accion == AccionABM.Ver)" 
+                                                Multiple="true"
+                                                Data="categorias" 
+                                                AllowClear="true" 
+                                                Placeholder="Seleccionar"
+                                                TextProperty="@nameof(CategoriaDTO.Nombre)" 
+                                                ValueProperty="@nameof(CategoriaDTO.Id)" 
+                                                @bind-Value="categoriaIds" />
                             </RadzenColumn>
                         </RadzenRow>
 
@@ -115,7 +131,7 @@ else
     public decimal precio;
     public int unidades;
     public int? marcaId;
-    public int? categoriaId;
+    public List<int> categoriaIds = new List<int>();
     private AccionABM accion;
 
     [Parameter]
@@ -134,7 +150,7 @@ else
             precio = producto.Precio;
             unidades = producto.Unidades;
             marcaId = producto.MarcaId;
-            categoriaId = producto.CategoriaId;
+            //categoriaIds = producto.CategoriaId;
         }
         else if (NM.Uri.Contains("VerProducto"))
         {
@@ -144,7 +160,7 @@ else
             precio = producto.Precio;
             unidades = producto.Unidades;
             marcaId = producto.MarcaId;
-            categoriaId = producto.CategoriaId;
+            //categoriaIds = producto.CategoriaId;
         }
         else
         {
@@ -165,35 +181,35 @@ else
 
             try
             {
-                await ProductService.Agregar(name, precio, unidades, marcaId, categoriaId);
+                await ProductService.Agregar(name, precio, unidades, marcaId, categoriaIds);
 
                 NS.Notify(new NotificationMessage
-                    {
-                        Summary = "Operación exitosa",
-                        Detail = "Producto agregado satisfactoriamente",
-                        Severity = NotificationSeverity.Success,
-                        Duration = 10000,
-                    });
+                {
+                    Summary = "Operación exitosa",
+                    Detail = "Producto agregado satisfactoriamente",
+                    Severity = NotificationSeverity.Success,
+                    Duration = 10000,
+                });
             }
             catch (InvalidOperationException ex)
             {
                 NS.Notify(new NotificationMessage
-                    {
-                        Summary = "Error de validación",
-                        Detail = $"{ex.Message}",
-                        Severity = NotificationSeverity.Warning,
-                        Duration = 10000,
-                    });
+                {
+                    Summary = "Error de validación",
+                    Detail = $"{ex.Message}",
+                    Severity = NotificationSeverity.Warning,
+                    Duration = 10000,
+                });
             }
             catch (Exception ex)
             {
                 NS.Notify(new NotificationMessage
-                    {
-                        Summary = "Ocurrió un error",
-                        Detail = $"No se pudo agregar el producto. Contáctese con su administrador.",
-                        Severity = NotificationSeverity.Error,
-                        Duration = 10000,
-                    });
+                {
+                    Summary = "Ocurrió un error",
+                    Detail = $"No se pudo agregar el producto. Contáctese con su administrador.",
+                    Severity = NotificationSeverity.Error,
+                    Duration = 10000,
+                });
             }
         }
         else
@@ -207,7 +223,7 @@ else
 
             try
             {
-                await ProductService.Actualizar(Id, name, precio, unidades, marcaId, categoriaId);
+                //await ProductService.Actualizar(Id, name, precio, unidades, marcaId, categoriaIds);
 
                 NS.Notify(new NotificationMessage
                 {
@@ -226,7 +242,7 @@ else
                     Severity = NotificationSeverity.Warning,
                     Duration = 10000,
                 });
-        }
+            }
             catch (Exception ex)
             {
                 NS.Notify(new NotificationMessage
