@@ -150,7 +150,7 @@ else
             precio = producto.Precio;
             unidades = producto.Unidades;
             marcaId = producto.MarcaId;
-            //categoriaIds = producto.CategoriaId;
+            categoriaIds = producto.Categorias.Select(x => x.Id).ToList();
         }
         else if (NM.Uri.Contains("VerProducto"))
         {
@@ -160,7 +160,7 @@ else
             precio = producto.Precio;
             unidades = producto.Unidades;
             marcaId = producto.MarcaId;
-            //categoriaIds = producto.CategoriaId;
+            categoriaIds = producto.Categorias.Select(x => x.Id).ToList();
         }
         else
         {
@@ -223,7 +223,7 @@ else
 
             try
             {
-                //await ProductService.Actualizar(Id, name, precio, unidades, marcaId, categoriaIds);
+                await ProductService.Actualizar(Id, name, precio, unidades, marcaId, categoriaIds);
 
                 NS.Notify(new NotificationMessage
                 {

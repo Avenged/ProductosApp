@@ -1,21 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Application.DTOs;
 
-namespace Application.DTOs
+public class ProductoDTO
 {
-
-    public class ProductoDTO
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public int Unidades { get; set; }
-        public decimal Precio { get; set; }
-        public string Marca { get; set; }
-        public int? MarcaId { get; set; }
-        public string Categoria { get; set; }
-        public int? CategoriaId { get; set; }
-    }
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public int Unidades { get; set; }
+    public decimal Precio { get; set; }
+    public string Marca { get; set; }
+    public int? MarcaId { get; set; }
+    public int? CategoriaId { get; set; }
+    public string CategoriasNombres { get => string.Join(", ", Categorias.Select(x => x.Nombre)); }
+    public IEnumerable<CategoriaDTO> Categorias { get; set; } = Enumerable.Empty<CategoriaDTO>();
 }

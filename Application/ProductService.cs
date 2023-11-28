@@ -63,6 +63,7 @@ public class ProductService : IProductService
     public async Task<IEnumerable<ProductoDTO>> Obtener()
     {
         var productos = await context.Productos
+            .Include(x => x.Categorias).ThenInclude(x => x.Categoria)
             .Include(p => p.Marca)
             .OrderBy(p => p.Name)
             .ToArrayAsync();
@@ -72,11 +73,16 @@ public class ProductService : IProductService
             Id = p.Id,
             Marca = p.Marca?.Nombre,
             MarcaId = p.MarcaId,
-            //Categoria = p.Categorias?.Nombre,
-            //CategoriaId = p.CategoriaIds,
+            //Categoria = producto.Categorias?.Nombre,
+            //CategoriaId = producto.CategoriaIds,
             Name = p.Name,
             Precio = p.Precio,
             Unidades = p.Unidades,
+            Categorias = p.Categorias.Select(prodCat => new CategoriaDTO
+            {
+                Id = prodCat.CategoriaId,
+                Nombre = prodCat.Categoria.Nombre,
+            }).ToArray()
         }).ToArray();
 
         return productosDTO;
@@ -91,7 +97,7 @@ public class ProductService : IProductService
         await context.SaveChangesAsync();
     }
 
-    public async Task Actualizar(int productoId, string nombre, decimal precio, int unidades, int? marcaId, int? categoriaId)
+    public async Task Actualizar(int productoId, string nombre, decimal precio, int unidades, int? marcaId, IEnumerable<int> categoriaIds)
     {
         // Trae el producto de la base, y trackea sus cambios
         var producto = await context.Productos
@@ -101,7 +107,29 @@ public class ProductService : IProductService
         producto.Precio = precio;
         producto.Unidades = unidades;
         producto.MarcaId = marcaId;
-        //producto.CategoriaIds = categoriaId;
+
+        //var categoriasActuales = producto.Categorias.Select(x => x.CategoriaId);
+
+        //List<int> categoriasAgregar = new();
+        //foreach (var categoriaId in categoriaIds)
+        //{
+        //    var loContiene = categoriasActuales.Contains(categoriaId);
+        //    if (!loContiene)
+        //    {
+        //        categoriasAgregar.Add(categoriaId);
+        //    }
+        //}
+
+        var categoriasAgregar = categoriaIds.Where(categoriaId => !producto.Categorias.Any(tablaInter => tablaInter.CategoriaId == categoriaId));
+        var categoriasEliminar = producto.Categorias.Where(x => !categoriaIds.Any(xx => xx == x.CategoriaId));
+
+        context.ProductoCategorias.AddRange(categoriasAgregar.Select(categoriaId => new ProductoCategorias
+        {
+            CategoriaId = categoriaId,
+            ProductoId = productoId,
+        }));
+
+        context.ProductoCategorias.RemoveRange(categoriasEliminar);
 
         await context.SaveChangesAsync();
     }
@@ -115,14 +143,16 @@ public class ProductService : IProductService
 
         // Si no encuentra el producto, entonces la variable "producto" quedará como nula
         // El producto acá se empieza a trackear.
-        var producto = await context.Productos.FirstOrDefaultAsync(x => x.Id == id);
+        var producto = await context.Productos
+            .Include(x => x.Categorias)
+            .FirstOrDefaultAsync(x => x.Id == id);
    
         if (producto is null)
         {
             return null;
         }
 
-        return new ProductoDTO
+        var dto = new ProductoDTO
         {
             Id = producto.Id,
             Marca = producto.Marca?.Nombre,
@@ -132,6 +162,13 @@ public class ProductService : IProductService
             Name = producto.Name,
             Precio = producto.Precio,
             Unidades = producto.Unidades,
+            Categorias = producto.Categorias.Select(prodCat => new CategoriaDTO
+            {
+                Id = prodCat.CategoriaId,
+                Nombre = prodCat.Categoria.Nombre,
+            }).ToArray()
         };
+
+        return dto;
     }
 }
