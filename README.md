@@ -18,3 +18,5 @@ https://youtu.be/OGC7wBEyJ_c
 https://youtu.be/yvKZtOXy0BQ
 10. Proyecto final en Blazor Parte 4 - Curso Intermedio C#:
 https://youtu.be/bp-ZdNTY73M
+10. Proyecto final en Blazor Parte 5 - Curso Intermedio C#:
+https://youtu.be/g0hNBvSwYBU
