@@ -5,7 +5,7 @@ namespace ProductosApp.Data;
 public class Producto
 {
     public int Id { get; set; }
-    public string Name { get; set; }
+    public string Name { get; set; } = null!;
     public int Unidades { get; set; }
     public decimal Precio { get; set; }
 

@@ -61,7 +61,7 @@ else
                                 <RadzenLabel Text="Precio" />
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
-                                <RadzenNumeric Style="width: 100%;" Name="Precio" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@precio" />
+                                <RadzenNumeric Min="0" Style="width: 100%;" Name="Precio" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@precio" />
                             </RadzenColumn>
                         </RadzenRow>
 
@@ -70,7 +70,7 @@ else
                                 <RadzenLabel Text="Unidades" />
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
-                                <RadzenNumeric Style="width: 100%;" Name="Unidades" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@unidades" />
+                                <RadzenNumeric Min="0" Style="width: 100%;" Name="Unidades" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@unidades" />
                             </RadzenColumn>
                         </RadzenRow>
 
@@ -86,8 +86,8 @@ else
                                                 AllowClear="true"
                                                 Placeholder="Seleccionar"
                                                 TextProperty="@nameof(MarcaDTO.Nombre)"
-                                                ValueProperty="@nameof(MarcaDTO.Id)" 
-                                                @bind-Value="marcaId" />
+                                                ValueProperty="@nameof(MarcaDTO.Id)"
+                                @bind-Value="marcaId" />
                             </RadzenColumn>
                         </RadzenRow>
 
@@ -97,14 +97,14 @@ else
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
                                 <RadzenDropDown Style="width: 100%;"
-                                                ReadOnly="@(accion == AccionABM.Ver)" 
+                                                ReadOnly="@(accion == AccionABM.Ver)"
                                                 Multiple="true"
-                                                Data="categorias" 
-                                                AllowClear="true" 
+                                                Data="categorias"
+                                                AllowClear="true"
                                                 Placeholder="Seleccionar"
-                                                TextProperty="@nameof(CategoriaDTO.Nombre)" 
-                                                ValueProperty="@nameof(CategoriaDTO.Id)" 
-                                                @bind-Value="categoriaIds" />
+                                                TextProperty="@nameof(CategoriaDTO.Nombre)"
+                                                ValueProperty="@nameof(CategoriaDTO.Id)"
+                                @bind-Value="categoriaIds" />
                             </RadzenColumn>
                         </RadzenRow>
 
@@ -123,11 +123,11 @@ else
 </RadzenTemplateForm>
 
 @code {
-    private IEnumerable<ProductoDTO> productos;
-    private IEnumerable<MarcaDTO> marcas;
-    private IEnumerable<CategoriaDTO> categorias;
+    private IEnumerable<ProductoDTO>? productos;
+    private IEnumerable<MarcaDTO>? marcas;
+    private IEnumerable<CategoriaDTO>? categorias;
 
-    public string name;
+    public string? name;
     public decimal precio;
     public int unidades;
     public int? marcaId;
@@ -137,34 +137,35 @@ else
     [Parameter]
     public int Id { get; set; }
 
+    protected override void OnInitialized()
+    {
+        if (NM.Uri.Contains("ActualizarProducto"))
+        {
+            accion = AccionABM.Actualizar;
+        }
+        else if (NM.Uri.Contains("VerProducto"))
+        {
+            accion = AccionABM.Ver;
+        }
+        else
+        {
+            accion = AccionABM.Crear;
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         marcas = await MarcaService.Obtener();
         categorias = await CategoriaService.Obtener();
 
-        if (NM.Uri.Contains("ActualizarProducto"))
+        if (NM.Uri.Contains("ActualizarProducto") || NM.Uri.Contains("VerProducto"))
         {
-            accion = AccionABM.Actualizar;
             var producto = await ProductService.Obtener(Id);
             name = producto.Name;
             precio = producto.Precio;
             unidades = producto.Unidades;
             marcaId = producto.MarcaId;
             categoriaIds = producto.Categorias.Select(x => x.Id).ToList();
-        }
-        else if (NM.Uri.Contains("VerProducto"))
-        {
-            accion = AccionABM.Ver;
-            var producto = await ProductService.Obtener(Id);
-            name = producto.Name;
-            precio = producto.Precio;
-            unidades = producto.Unidades;
-            marcaId = producto.MarcaId;
-            categoriaIds = producto.Categorias.Select(x => x.Id).ToList();
-        }
-        else
-        {
-            accion = AccionABM.Crear;
         }
     }
 
