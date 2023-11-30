@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProductosApp.Data;
 
@@ -11,9 +12,11 @@ using ProductosApp.Data;
 namespace ProductosApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231129232958_AgregarColumnaIdEstado")]
+    partial class AgregarColumnaIdEstado
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -37,23 +40,6 @@ namespace ProductosApp.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Estados");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = -1,
-                            Nombre = "ACTIVO"
-                        },
-                        new
-                        {
-                            Id = -2,
-                            Nombre = "INACTIVO"
-                        },
-                        new
-                        {
-                            Id = -3,
-                            Nombre = "BAJA"
-                        });
                 });
 
             modelBuilder.Entity("Domain.ProductoCategorias", b =>
@@ -289,7 +275,7 @@ namespace ProductosApp.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("EstadoId")
+                    b.Property<int?>("EstadoId")
                         .HasColumnType("int");
 
                     b.Property<string>("Nombre")
@@ -311,7 +297,7 @@ namespace ProductosApp.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("EstadoId")
+                    b.Property<int?>("EstadoId")
                         .HasColumnType("int");
 
                     b.Property<string>("Nombre")
@@ -333,7 +319,7 @@ namespace ProductosApp.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("EstadoId")
+                    b.Property<int?>("EstadoId")
                         .HasColumnType("int");
 
                     b.Property<int?>("MarcaId")
@@ -431,10 +417,8 @@ namespace ProductosApp.Data.Migrations
             modelBuilder.Entity("ProductosApp.Data.Categoria", b =>
                 {
                     b.HasOne("Domain.Estado", "Estado")
-                        .WithMany("Categorias")
-                        .HasForeignKey("EstadoId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .WithMany()
+                        .HasForeignKey("EstadoId");
 
                     b.Navigation("Estado");
                 });
@@ -442,10 +426,8 @@ namespace ProductosApp.Data.Migrations
             modelBuilder.Entity("ProductosApp.Data.Marca", b =>
                 {
                     b.HasOne("Domain.Estado", "Estado")
-                        .WithMany("Marcas")
-                        .HasForeignKey("EstadoId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .WithMany()
+                        .HasForeignKey("EstadoId");
 
                     b.Navigation("Estado");
                 });
@@ -453,10 +435,8 @@ namespace ProductosApp.Data.Migrations
             modelBuilder.Entity("ProductosApp.Data.Producto", b =>
                 {
                     b.HasOne("Domain.Estado", "Estado")
-                        .WithMany("Productos")
-                        .HasForeignKey("EstadoId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .WithMany()
+                        .HasForeignKey("EstadoId");
 
                     b.HasOne("ProductosApp.Data.Marca", "Marca")
                         .WithMany()
@@ -465,15 +445,6 @@ namespace ProductosApp.Data.Migrations
                     b.Navigation("Estado");
 
                     b.Navigation("Marca");
-                });
-
-            modelBuilder.Entity("Domain.Estado", b =>
-                {
-                    b.Navigation("Categorias");
-
-                    b.Navigation("Marcas");
-
-                    b.Navigation("Productos");
                 });
 
             modelBuilder.Entity("ProductosApp.Data.Producto", b =>

@@ -10,5 +10,7 @@ public class ProductoDTO
     public int? MarcaId { get; set; }
     public int? CategoriaId { get; set; }
     public string CategoriasNombres { get => string.Join(", ", Categorias.Select(x => x.Nombre)); }
+    public string Estado { get; set; }
+    public int EstadoId { get; set; }
     public IEnumerable<CategoriaDTO> Categorias { get; set; } = Enumerable.Empty<CategoriaDTO>();
 }

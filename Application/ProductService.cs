@@ -23,6 +23,7 @@ public class ProductService : IProductService
             Precio = precio,
             Unidades = unidades,
             MarcaId = marcaId,
+            EstadoId = (int)Estados.ACTIVO,
         };
         context.Productos.Add(producto);
         await context.SaveChangesAsync();
@@ -63,8 +64,10 @@ public class ProductService : IProductService
     public async Task<IEnumerable<ProductoDTO>> Obtener()
     {
         var productos = await context.Productos
+            .Where(x => x.EstadoId != (int)Estados.BAJA)
             .Include(x => x.Categorias).ThenInclude(x => x.Categoria)
             .Include(p => p.Marca)
+            .Include(p => p.Estado)
             .OrderBy(p => p.Name)
             .ToArrayAsync();
 
@@ -73,8 +76,8 @@ public class ProductService : IProductService
             Id = p.Id,
             Marca = p.Marca?.Nombre,
             MarcaId = p.MarcaId,
-            //Categoria = producto.Categorias?.Nombre,
-            //CategoriaId = producto.CategoriaIds,
+            Estado = p.Estado.Nombre,
+            EstadoId = p.EstadoId,
             Name = p.Name,
             Precio = p.Precio,
             Unidades = p.Unidades,
@@ -93,7 +96,16 @@ public class ProductService : IProductService
         var producto = await context.Productos
             .FirstOrDefaultAsync(x => x.Id == id);
 
-        context.Productos.Remove(producto);
+        if (producto is null)
+        {
+            throw new Exception($"No se encontró un producto con el id {id}.");
+        }
+
+        producto.EstadoId = (int)Estados.BAJA;
+        context.Productos.Update(producto);
+
+        //context.Productos.Remove(producto);
+
         await context.SaveChangesAsync();
     }
 

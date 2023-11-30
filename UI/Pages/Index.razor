@@ -35,6 +35,7 @@
         <RadzenDataGridColumn TItem="ProductoDTO" Property="@nameof(ProductoDTO.Unidades)" Filterable="true" Title="Unidades" Width="80px" TextAlign="TextAlign.Center" />
         <RadzenDataGridColumn TItem="ProductoDTO" Property="@nameof(ProductoDTO.Marca)" Filterable="true" Title="Marca" Width="80px" TextAlign="TextAlign.Center" />
         <RadzenDataGridColumn TItem="ProductoDTO" Property="@nameof(ProductoDTO.CategoriasNombres)" Filterable="true" Title="Categorias" Width="80px" TextAlign="TextAlign.Center" />
+        <RadzenDataGridColumn TItem="ProductoDTO" Property="@nameof(ProductoDTO.Estado)" Filterable="true" Title="Estado" Width="80px" TextAlign="TextAlign.Center" />
         <RadzenDataGridColumn TItem="ProductoDTO" Title="Acciones" Width="50px" TextAlign="TextAlign.Center">
             <Template Context="data">
                 <RadzenButton Icon="visibility" ButtonStyle="ButtonStyle.Info" Click="@(x => NM.NavigateTo($"/VerProducto/{data.Id}"))" />

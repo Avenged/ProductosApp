@@ -6,6 +6,7 @@ namespace ProductosApp.Data
 {
     public class ApplicationDbContext : IdentityDbContext
     {
+        public DbSet<Estado> Estados { get; set; }
         public DbSet<ProductoCategorias> ProductoCategorias { get; set; }
         public DbSet<Categoria> Categorias { get; set; }
         public DbSet<Producto> Productos { get; set; }
@@ -20,25 +21,47 @@ namespace ProductosApp.Data
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<Producto>(p =>
+            builder.Entity<Estado>(p =>
             {
-                p.HasData(new Producto[]
+                p.HasData(new Estado[]
                 {
-                    new Producto
+                    new Estado
                     {
                         Id = -1,
-                        Name = "Televisor Samsung",
-                        Precio = 100,
-                        Unidades = 10,
+                        Nombre = "ACTIVO",
                     },
-                    new Producto
+                    new Estado
                     {
                         Id = -2,
-                        Name = "iPhone 14 Pro Max",
-                        Precio = 1200,
-                        Unidades = 10,
+                        Nombre = "INACTIVO",
+                    },
+                    new Estado
+                    {
+                        Id = -3,
+                        Nombre = "BAJA",
                     },
                 });
+            });
+
+            builder.Entity<Producto>(p =>
+            {
+                p.HasOne(x => x.Estado)
+                    .WithMany(x => x.Productos)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            builder.Entity<Categoria>(p =>
+            {
+                p.HasOne(x => x.Estado)
+                    .WithMany(x => x.Categorias)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            builder.Entity<Marca>(p =>
+            {
+                p.HasOne(x => x.Estado)
+                    .WithMany(x => x.Marcas)
+                    .OnDelete(DeleteBehavior.NoAction);
             });
         }
     }
