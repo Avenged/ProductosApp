@@ -1,4 +1,6 @@
 ﻿using Application.DTOs;
+using Application.Enums;
+using Application.Interfaces;
 using Domain;
 using Microsoft.EntityFrameworkCore;
 using ProductosApp.Data;
@@ -109,16 +111,22 @@ public class ProductService : IProductService
         await context.SaveChangesAsync();
     }
 
-    public async Task Actualizar(int productoId, string nombre, decimal precio, int unidades, int? marcaId, IEnumerable<int> categoriaIds)
+    public async Task Actualizar(int productoId, string nombre, decimal precio, int unidades, int? marcaId, IEnumerable<int> categoriaIds, int estadoId)
     {
         // Trae el producto de la base, y trackea sus cambios
         var producto = await context.Productos
             .FirstOrDefaultAsync(x => x.Id == productoId);
 
+        if (producto is null)
+        {
+            throw new InvalidOperationException($"El producto con id {productoId} no existe.");
+        }
+
         producto.Name = nombre;
         producto.Precio = precio;
         producto.Unidades = unidades;
         producto.MarcaId = marcaId;
+        producto.EstadoId = estadoId;
 
         //var categoriasActuales = producto.Categorias.Select(x => x.CategoriaId);
 
@@ -174,6 +182,7 @@ public class ProductService : IProductService
             Name = producto.Name,
             Precio = producto.Precio,
             Unidades = producto.Unidades,
+            EstadoId = producto.EstadoId,
             Categorias = producto.Categorias.Select(prodCat => new CategoriaDTO
             {
                 Id = prodCat.CategoriaId,

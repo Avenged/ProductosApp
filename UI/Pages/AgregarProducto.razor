@@ -5,13 +5,7 @@
 @using Application;
 @using Application.DTOs;
 @using ProductosApp.Data;
-
-@inject NavigationManager NM
-@inject NotificationService NS
-@inject DialogService DialogService
-@inject IProductService ProductService
-@inject IMarcaService MarcaService
-@inject ICategoriaService CategoriaService
+@using Application.Interfaces;
 
 @if (accion == AccionABM.Ver)
 {
@@ -40,7 +34,7 @@ else
     <h3>Agregar Producto</h3>
 }
 
-<RadzenTemplateForm Data="@productos">
+<RadzenTemplateForm TItem="Model" Data="@model" Submit="@Submit" InvalidSubmit="@(_ => NS.Notify(NotificationSeverity.Warning, "Error de validación"))">
     <RadzenRow Gap="2rem" Class="rz-p-0 rz-p-lg-4">
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenStack>
@@ -52,7 +46,8 @@ else
                                 <RadzenLabel Text="Nombre" />
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
-                                <RadzenTextBox Style="width: 100%;" Name="Name" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@name" />
+                                <RadzenTextBox Style="width: 100%;" Name="Name" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@model.Name" />
+                                <RadzenRequiredValidator Component="Name" Text="El nombre es requerido" />
                             </RadzenColumn>
                         </RadzenRow>
 
@@ -61,7 +56,8 @@ else
                                 <RadzenLabel Text="Precio" />
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
-                                <RadzenNumeric Min="0" Style="width: 100%;" Name="Precio" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@precio" />
+                                <RadzenNumeric Min="0" Style="width: 100%;" ShowUpDown="false" Name="Precio" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@model.Precio" />
+                                <RadzenNumericRangeValidator Component="Precio" Min="0.01" Text="El precio deberia ser mayor a 0" />
                             </RadzenColumn>
                         </RadzenRow>
 
@@ -70,7 +66,7 @@ else
                                 <RadzenLabel Text="Unidades" />
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
-                                <RadzenNumeric Min="0" Style="width: 100%;" Name="Unidades" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@unidades" />
+                                <RadzenNumeric Min="0" Style="width: 100%;" ShowUpDown="false" Name="Unidades" ReadOnly="@(accion == AccionABM.Ver)" @bind-Value="@model.Unidades" />
                             </RadzenColumn>
                         </RadzenRow>
 
@@ -83,11 +79,13 @@ else
                                                 ReadOnly="@(accion == AccionABM.Ver)"
                                                 TValue="int?"
                                                 Data="marcas"
+                                                Name="Marca"
                                                 AllowClear="true"
                                                 Placeholder="Seleccionar"
                                                 TextProperty="@nameof(MarcaDTO.Nombre)"
                                                 ValueProperty="@nameof(MarcaDTO.Id)"
-                                @bind-Value="marcaId" />
+                                                @bind-Value="model.MarcaId" />
+                                <RadzenRequiredValidator Component="Marca" Text="La marca es requerida" />
                             </RadzenColumn>
                         </RadzenRow>
 
@@ -99,14 +97,35 @@ else
                                 <RadzenDropDown Style="width: 100%;"
                                                 ReadOnly="@(accion == AccionABM.Ver)"
                                                 Multiple="true"
+                                                Name="Categorias"
                                                 Data="categorias"
                                                 AllowClear="true"
                                                 Placeholder="Seleccionar"
                                                 TextProperty="@nameof(CategoriaDTO.Nombre)"
                                                 ValueProperty="@nameof(CategoriaDTO.Id)"
-                                @bind-Value="categoriaIds" />
+                                                @bind-Value="model.CategoriaIds" />
+                                <RadzenRequiredValidator Component="Categorias" Text="Se requiere al menos una categoría" />
                             </RadzenColumn>
                         </RadzenRow>
+
+                        @if (accion != AccionABM.Crear)
+                        {
+                            <RadzenRow AlignItems="AlignItems.Center">
+                                <RadzenColumn Size="12" SizeMD="4">
+                                    <RadzenLabel Text="Estado" />
+                                </RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="8">
+                                    <RadzenDropDown Style="width: 100%;"
+                                                    ReadOnly="@(accion == AccionABM.Ver)"
+                                                    Data="estados"
+                                                    AllowClear="false"
+                                                    Placeholder="Seleccionar"
+                                                    TextProperty="@nameof(EstadoDTO.Nombre)"
+                                                    ValueProperty="@nameof(EstadoDTO.Id)"
+                                                    @bind-Value="model.EstadoId" />
+                                </RadzenColumn>
+                            </RadzenRow>
+                        }
 
                     </RadzenStack>
                 </RadzenFieldset>
@@ -116,152 +135,8 @@ else
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem" Class="rz-mt-8 rz-mb-4">
         @if (accion != AccionABM.Ver)
         {
-            <RadzenButton ButtonType="ButtonType.Submit" Size="ButtonSize.Large" Icon="save" Text="Save" Click="@Submit" />
+            <RadzenButton ButtonType="ButtonType.Submit" Size="ButtonSize.Large" Icon="save" Text="Save" />
         }
         <RadzenButton ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Large" Icon="cancel" Text="Cancel" Click="@Cancel" />
     </RadzenStack>
 </RadzenTemplateForm>
-
-@code {
-    private IEnumerable<ProductoDTO>? productos;
-    private IEnumerable<MarcaDTO>? marcas;
-    private IEnumerable<CategoriaDTO>? categorias;
-
-    public string? name;
-    public decimal precio;
-    public int unidades;
-    public int? marcaId;
-    public List<int> categoriaIds = new List<int>();
-    private AccionABM accion;
-
-    [Parameter]
-    public int Id { get; set; }
-
-    protected override void OnInitialized()
-    {
-        if (NM.Uri.Contains("ActualizarProducto"))
-        {
-            accion = AccionABM.Actualizar;
-        }
-        else if (NM.Uri.Contains("VerProducto"))
-        {
-            accion = AccionABM.Ver;
-        }
-        else
-        {
-            accion = AccionABM.Crear;
-        }
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        marcas = await MarcaService.Obtener();
-        categorias = await CategoriaService.Obtener();
-
-        if (NM.Uri.Contains("ActualizarProducto") || NM.Uri.Contains("VerProducto"))
-        {
-            var producto = await ProductService.Obtener(Id);
-            name = producto.Name;
-            precio = producto.Precio;
-            unidades = producto.Unidades;
-            marcaId = producto.MarcaId;
-            categoriaIds = producto.Categorias.Select(x => x.Id).ToList();
-        }
-    }
-
-    private async Task Submit()
-    {
-        if (accion == AccionABM.Crear)
-        {
-            var result = await DialogService.Confirm("Desea agregar el producto?", "Validacion", new ConfirmOptions() { OkButtonText = "Si", CancelButtonText = "No" });
-
-            if (result == false || result is null)
-            {
-                return;
-            }
-
-            try
-            {
-                await ProductService.Agregar(name, precio, unidades, marcaId, categoriaIds);
-
-                NS.Notify(new NotificationMessage
-                {
-                    Summary = "Operación exitosa",
-                    Detail = "Producto agregado satisfactoriamente",
-                    Severity = NotificationSeverity.Success,
-                    Duration = 10000,
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                NS.Notify(new NotificationMessage
-                {
-                    Summary = "Error de validación",
-                    Detail = $"{ex.Message}",
-                    Severity = NotificationSeverity.Warning,
-                    Duration = 10000,
-                });
-            }
-            catch (Exception ex)
-            {
-                NS.Notify(new NotificationMessage
-                {
-                    Summary = "Ocurrió un error",
-                    Detail = $"No se pudo agregar el producto. Contáctese con su administrador.",
-                    Severity = NotificationSeverity.Error,
-                    Duration = 10000,
-                });
-            }
-        }
-        else
-        {
-            var result = await DialogService.Confirm("Desea actualizar el producto?", "Validacion", new ConfirmOptions() { OkButtonText = "Si", CancelButtonText = "No" });
-
-            if (result == false || result is null)
-            {
-                return;
-            }
-
-            try
-            {
-                await ProductService.Actualizar(Id, name, precio, unidades, marcaId, categoriaIds);
-
-                NS.Notify(new NotificationMessage
-                {
-                    Summary = "Operación exitosa",
-                    Detail = "Producto actualizado satisfactoriamente",
-                    Severity = NotificationSeverity.Success,
-                    Duration = 10000,
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                NS.Notify(new NotificationMessage
-                {
-                    Summary = "Error de validación",
-                    Detail = $"{ex.Message}",
-                    Severity = NotificationSeverity.Warning,
-                    Duration = 10000,
-                });
-            }
-            catch (Exception ex)
-            {
-                NS.Notify(new NotificationMessage
-                {
-                    Summary = "Ocurrió un error",
-                    Detail = $"No se pudo actualizar el producto. Contáctese con su administrador.",
-                    Severity = NotificationSeverity.Error,
-                    Duration = 10000,
-                });
-            }
-        }
-
-        NM.NavigateTo("/");
-    }
-
-    void Cancel()
-    {
-        NM.NavigateTo("/");
-    }
-
-}
